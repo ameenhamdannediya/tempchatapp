@@ -5,27 +5,149 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Temporary Chat</title>
   <style>
-    :root{--bg:#0b0b0f;--panel:#0f1720;--muted:#94a3b8;--accent:#60a5fa;}
-    *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background:var(--bg);color:#e6eef6;display:flex;align-items:center;justify-content:center;height:100vh;}
-    .card{width:100%;max-width:720px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border-radius:12px;padding:14px;box-shadow:0 6px 20px rgba(2,6,23,0.6);}
-    header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-    header h1{font-size:18px;margin:0}
-    #chat{height:56vh;max-height:60vh;background:var(--panel);border-radius:8px;padding:12px;overflow:auto;border:1px solid rgba(255,255,255,0.03)}
-    .msg{padding:6px 8px;margin:6px 0;border-radius:6px;background:rgba(255,255,255,0.02);font-size:14px;word-break:break-word}
-    .meta{font-size:11px;color:var(--muted);margin-bottom:6px}
-    .composer{display:flex;gap:8px;margin-top:10px}
-    .composer input[type="text"]{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;font-size:15px}
-    .composer button{padding:10px 14px;border-radius:8px;border:none;background:var(--accent);color:#04233a;font-weight:600;cursor:pointer}
-    .composer button:active{transform:translateY(1px)}
-    footer{font-size:12px;color:var(--muted);margin-top:10px;text-align:center}
+    :root {
+      --bg: #0b0b0f;
+      --panel: #0f1720;
+      --muted: #94a3b8;
+      --accent: #60a5fa;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      background: var(--bg);
+      color: #e6eef6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .card {
+      width: 100%;
+      max-width: 720px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 6px 20px rgba(2,6,23,0.6);
+      position: relative;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    header h1 { font-size: 18px; margin: 0; }
+    #chat {
+      height: 56vh;
+      max-height: 60vh;
+      background: var(--panel);
+      border-radius: 8px;
+      padding: 12px;
+      overflow: auto;
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+    .msg {
+      padding: 6px 8px;
+      margin: 6px 0;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.02);
+      font-size: 14px;
+      word-break: break-word;
+    }
+    .meta {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .composer {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .composer input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.04);
+      background: transparent;
+      color: inherit;
+      font-size: 15px;
+    }
+    .composer button {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent);
+      color: #04233a;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .composer button:active { transform: translateY(1px); }
+    footer {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    /* Name popup */
+    #namePopup {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .popup-content {
+      background: var(--panel);
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0,0,0,0.6);
+      width: 90%;
+      max-width: 320px;
+    }
+    .popup-content h2 {
+      margin-bottom: 12px;
+      font-size: 18px;
+    }
+    .popup-content input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: transparent;
+      color: #e6eef6;
+      margin-bottom: 10px;
+      font-size: 15px;
+    }
+    .popup-content button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #04233a;
+      font-weight: 600;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
+  <div id="namePopup">
+    <div class="popup-content">
+      <h2>Enter your name</h2>
+      <input id="nameInput" type="text" placeholder="Your full name" />
+      <button id="saveNameBtn">Continue</button>
+    </div>
+  </div>
+
   <div class="card" role="main">
     <header>
       <h1>🔗 Temporary Chat</h1>
-      <div style="margin-left:auto;color:var(--muted);font-size:13px">Anonymous — ephemeral</div>
+      <div style="margin-left:auto;color:var(--muted);font-size:13px" id="userLabel"></div>
     </header>
 
     <div id="chat" aria-live="polite" tabindex="0"></div>
@@ -42,13 +164,35 @@
     const chat = document.getElementById('chat');
     const input = document.getElementById('input');
     const sendBtn = document.getElementById('send');
+    const namePopup = document.getElementById('namePopup');
+    const nameInput = document.getElementById('nameInput');
+    const saveNameBtn = document.getElementById('saveNameBtn');
+    const userLabel = document.getElementById('userLabel');
 
-    // Render a message (simple, no usernames)
+    // Check if a name is saved in localStorage
+    let userName = localStorage.getItem('chatUserName');
+    if (!userName) {
+      namePopup.style.display = 'flex';
+    } else {
+      userLabel.textContent = userName;
+      namePopup.style.display = 'none';
+    }
+
+    saveNameBtn.addEventListener('click', () => {
+      const nameVal = nameInput.value.trim();
+      if (nameVal) {
+        localStorage.setItem('chatUserName', nameVal);
+        userName = nameVal;
+        userLabel.textContent = nameVal;
+        namePopup.style.display = 'none';
+      }
+    });
+
+    // Render a message (with username)
     function renderLine(line) {
       if (!line) return;
       const el = document.createElement('div');
       el.className = 'msg';
-      // optional: split timestamp if backend includes one
       el.textContent = line;
       chat.appendChild(el);
       chat.scrollTop = chat.scrollHeight;
@@ -64,36 +208,31 @@
         if (text.trim() === '') return;
         const lines = text.split(/\r?\n/).filter(Boolean);
         for (const l of lines) renderLine(l);
-      } catch (e) {
-        // ignore; server maybe down
-      }
+      } catch (e) {}
     }
 
-    // Send message to backend
+    // Send message with username
     async function sendMessage() {
       const msg = input.value.trim();
-      if (!msg) return;
+      if (!msg || !userName) return;
       try {
         await fetch('/post', {
           method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({msg})
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ msg: `${userName}: ${msg}` })
         });
         input.value = '';
-        // optimistic fetch
         setTimeout(fetchMessages, 200);
       } catch (e) {
         console.error('send failed', e);
       }
     }
 
-    // events
     sendBtn.addEventListener('click', sendMessage);
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') sendMessage();
     });
 
-    // start polling
     fetchMessages();
     setInterval(fetchMessages, 1500);
   </script>
