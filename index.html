@@ -213,7 +213,6 @@ function saveName() {
         for (const l of lines) renderLine(l);
       } catch (e) {}
     }
-    
     // Send message with username
     async function sendMessage() {
       const msg = input.value.trim();
@@ -222,7 +221,7 @@ function saveName() {
         await fetch('/post', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ msg: `${userName}   : ${msg}` })
+          body: JSON.stringify({ msg: `${userName}  : ${msg}` })
         });
         input.value = '';
         setTimeout(fetchMessages, 200);
@@ -249,4 +248,4 @@ function saveName() {
 </body>
 </html>
 
-
+<!-- asd -->
