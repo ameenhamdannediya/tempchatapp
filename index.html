@@ -189,13 +189,6 @@ function saveName() {
   }
 }
 
-// Button click
-saveNameBtn.addEventListener('click', saveName);
-
-// Enter key press in input
-nameInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') saveName();
-});
 
 
     // Render a message (with username)
@@ -229,7 +222,7 @@ nameInput.addEventListener('keydown', (e) => {
         await fetch('/post', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ msg: `${userName}  : ${msg}` })
+          body: JSON.stringify({ msg: `${userName}: ${msg}` })
         });
         input.value = '';
         setTimeout(fetchMessages, 200);
@@ -237,6 +230,13 @@ nameInput.addEventListener('keydown', (e) => {
         console.error('send failed', e);
       }
     }
+
+    // Button click
+    saveNameBtn.addEventListener('click', saveName);
+    // Enter key press in input
+    nameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') saveName();
+    });
 
     sendBtn.addEventListener('click', sendMessage);
     input.addEventListener('keydown', (e) => {
@@ -248,4 +248,5 @@ nameInput.addEventListener('keydown', (e) => {
   </script>
 </body>
 </html>
-<!-- asd -->
+<!-- awdasdw -->
+asdw
