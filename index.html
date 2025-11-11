@@ -178,15 +178,25 @@
       namePopup.style.display = 'none';
     }
 
-    saveNameBtn.addEventListener('click', () => {
-      const nameVal = nameInput.value.trim();
-      if (nameVal) {
-        localStorage.setItem('chatUserName', nameVal);
-        userName = nameVal;
-        userLabel.textContent = nameVal;
-        namePopup.style.display = 'none';
-      }
-    });
+   // Function to save the name
+function saveName() {
+  const nameVal = nameInput.value.trim();
+  if (nameVal) {
+    localStorage.setItem('chatUserName', nameVal);
+    userName = nameVal;
+    userLabel.textContent = nameVal;
+    namePopup.style.display = 'none';
+  }
+}
+
+// Button click
+saveNameBtn.addEventListener('click', saveName);
+
+// Enter key press in input
+nameInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') saveName();
+});
+
 
     // Render a message (with username)
     function renderLine(line) {
@@ -218,8 +228,8 @@
       try {
         await fetch('/post', {
           method: 'POST',
-          headers: { 'Content-Type '+" " + : 'application/json' },
-          body: JSON.stringify({ msg: `${userName}: ${msg}` })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ msg: `${userName}  : ${msg}` })
         });
         input.value = '';
         setTimeout(fetchMessages, 200);
