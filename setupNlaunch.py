@@ -1,8 +1,15 @@
 # --- setupNlaunch.py ---
-# Run this in Colab:  !python setupNlaunch.py
-# Make sure: .token.zip exists in your GitHub repo (with token.txt inside)
+# Run:  python setupNlaunch.py
+# Make sure .token.zip exists in your GitHub repo (with token.txt inside)
 
-import os, subprocess, shlex, time, re, requests, threading, pyzipper
+import os
+import subprocess
+import shlex
+import time
+import re
+import requests
+import threading
+import pyzipper
 from flask import Flask, Response, request
 from getpass import getpass
 
@@ -47,10 +54,26 @@ os.remove(ZIP_PATH)
 print("🔐 Token successfully loaded and ready to use!")
 
 # ----------------------------
-# 2️⃣ Setup Flask Chat + Tunnel
+# 2️⃣ Ensure dependencies installed
 # ----------------------------
-!pip install flask cloudflared requests -q
+def ensure_installed(pkgs):
+    subprocess.run([os.sys.executable, "-m", "pip", "install", "-q"] + pkgs, check=True)
 
+ensure_installed(["flask", "requests", "cloudflared", "pyzipper"])
+
+# Download cloudflared binary manually (since pip one is not the tunnel CLI)
+CLOUDFLARED_BIN = "/usr/local/bin/cloudflared"
+if not os.path.exists(CLOUDFLARED_BIN):
+    print("📦 Downloading cloudflared binary...")
+    subprocess.run([
+        "wget", "-q", "-O", CLOUDFLARED_BIN,
+        "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64"
+    ], check=True)
+    subprocess.run(["chmod", "+x", CLOUDFLARED_BIN], check=True)
+
+# ----------------------------
+# 3️⃣ Flask Chat + Tunnel Setup
+# ----------------------------
 USERNAME = "archlinuxwithniri"
 EMAIL = "archlinuxwithniri@gmail.com"
 REPO_NAME = "tempchatapp"
@@ -107,7 +130,7 @@ time.sleep(2)
 # --- Start Cloudflared ---
 print("🚀 Starting Cloudflared tunnel...")
 logfile = "/content/cloudflared.log"
-cmd = f"/usr/local/bin/cloudflared tunnel --url http://localhost:{PORT} --no-autoupdate"
+cmd = f"{CLOUDFLARED_BIN} tunnel --url http://localhost:{PORT} --no-autoupdate"
 proc = subprocess.Popen(shlex.split(cmd), stdout=open(logfile, "w"), stderr=subprocess.STDOUT)
 
 def find_public_url(timeout=30):
@@ -139,7 +162,7 @@ else:
     else:
         print("⚠️ Missing token, skipping online update.")
 
-print("⏳ Tunnel active. Keep this cell running. Stop to end session.")
+print("⏳ Tunnel active. Keep this running. Stop to end session.")
 
 # --- When stopped ---
 try:
