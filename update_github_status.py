@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
 Usage:
-  python update_github_status.py <GITHUB_TOKEN> "<PUBLIC_URL>" "<MESSAGE>"
+  python update_github_status.py <GITHUB_TOKEN> "<PUBLIC_URL>" "<MESSAGE>" "<GIT_NAME>" "<GIT_EMAIL>"
 
-Pushes the already-edited README.md back to GitHub.
-Assumes README.md exists in the working directory.
+Example:
+  python update_github_status.py ABC123 "https://dummy.trycloudflare.com" "🟢 Currently Online" "Ameen" "ameen@example.com"
 """
 
 import sys, os, subprocess
@@ -26,23 +26,28 @@ def ensure_repo(token):
         run(["git", "reset", "--hard", "origin/main"], cwd=LOCAL_DIR)
     return LOCAL_DIR
 
-def push_updated_readme(token, url, msg):
+def push_updated_readme(token, url, msg, git_name, git_email):
     repo_dir = ensure_repo(token)
     readme_path = os.path.join(repo_dir, "README.md")
 
-    # Overwrite with the local Colab version
+    # Copy local version into repo
     if os.path.exists("README.md"):
         run(["cp", "README.md", readme_path])
 
+    # Set Git user identity (local only)
+    run(["git", "config", "user.name", git_name], cwd=repo_dir)
+    run(["git", "config", "user.email", git_email], cwd=repo_dir)
+
+    # Commit and push
     run(["git", "add", "README.md"], cwd=repo_dir)
     run(["git", "commit", "-m", f"Update live status: {msg}"], cwd=repo_dir)
     run(["git", "push", "origin", "HEAD:main"], cwd=repo_dir)
     print("✅ README pushed successfully.")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 4:
-        print("Usage: python update_github_status.py <TOKEN> <URL> <MESSAGE>")
+    if len(sys.argv) < 6:
+        print("Usage: python update_github_status.py <TOKEN> <URL> <MESSAGE> <GIT_NAME> <GIT_EMAIL>")
         sys.exit(1)
 
-    token, url, msg = sys.argv[1], sys.argv[2], sys.argv[3]
-    push_updated_readme(token, url, msg)
+    token, url, msg, git_name, git_email = sys.argv[1:6]
+    push_updated_readme(token, url, msg, git_name, git_email)
