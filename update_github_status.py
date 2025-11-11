@@ -3,24 +3,18 @@
 Usage:
   python update_github_status.py <GITHUB_TOKEN> "<PUBLIC_URL>" "<MESSAGE>"
 
-This script edits the README.md in the repo archlinuxwithniri/tempchatapp
-and adds or updates a single line like:
-
-🚀 **Live Site:** [https://example.trycloudflare.com] (🟢 Online)
-
-When stopped, it removes that line but keeps the rest of the README intact.
+Pushes the already-edited README.md back to GitHub.
+Assumes README.md exists in the working directory.
 """
 
-import sys, os, subprocess, re
+import sys, os, subprocess
 
-# -------- CONFIG --------
 REPO_OWNER = "archlinuxwithniri"
 REPO_NAME = "tempchatapp"
 LOCAL_DIR = "/content/tempchatapp_repo"
-# ------------------------
 
 def run(cmd, cwd=None):
-    subprocess.run(cmd, check=True, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.run(cmd, check=True, cwd=cwd)
 
 def ensure_repo(token):
     repo_url = f"https://{REPO_OWNER}:{token}@github.com/{REPO_OWNER}/{REPO_NAME}.git"
@@ -32,31 +26,18 @@ def ensure_repo(token):
         run(["git", "reset", "--hard", "origin/main"], cwd=LOCAL_DIR)
     return LOCAL_DIR
 
-def update_readme(token, url, msg):
+def push_updated_readme(token, url, msg):
     repo_dir = ensure_repo(token)
     readme_path = os.path.join(repo_dir, "README.md")
 
-    # Read current content (create if missing)
-    if os.path.exists(readme_path):
-        with open(readme_path, "r", encoding="utf-8") as f:
-            content = f.read()
-    else:
-        content = ""
-
-    # Remove old live line
-    content = re.sub(r"^🚀 \*\*Live Site:\*\*.*$\n?", "", content, flags=re.MULTILINE)
-
-    if url.strip():
-        new_line = f"🚀 **Live Site:** [{url}] ({msg})\n"
-        content = new_line + content  # add on top
-
-    with open(readme_path, "w", encoding="utf-8") as f:
-        f.write(content)
+    # Overwrite with the local Colab version
+    if os.path.exists("README.md"):
+        run(["cp", "README.md", readme_path])
 
     run(["git", "add", "README.md"], cwd=repo_dir)
-    run(["git", "commit", "-m", f"Update live link: {msg}"], cwd=repo_dir)
+    run(["git", "commit", "-m", f"Update live status: {msg}"], cwd=repo_dir)
     run(["git", "push", "origin", "HEAD:main"], cwd=repo_dir)
-    print("✅ README updated successfully.")
+    print("✅ README pushed successfully.")
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:
@@ -64,7 +45,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     token, url, msg = sys.argv[1], sys.argv[2], sys.argv[3]
-    try:
-        update_readme(token, url, msg)
-    except Exception as e:
-        print("❌ Error:", e)
+    push_updated_readme(token, url, msg)
