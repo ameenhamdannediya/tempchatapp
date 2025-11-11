@@ -222,7 +222,7 @@ function saveName() {
         await fetch('/post', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ msg: `${userName}`+" "+`: ${msg}` })
+          body: JSON.stringify({ msg: `${userName}   : ${msg}` })
         });
         input.value = '';
         setTimeout(fetchMessages, 200);
@@ -248,4 +248,5 @@ function saveName() {
   </script>
 </body>
 </html>
+
 
