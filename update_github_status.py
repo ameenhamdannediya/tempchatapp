@@ -1,53 +1,85 @@
-#!/usr/bin/env python3
-"""
-Usage:
-  python update_github_status.py <GITHUB_TOKEN> "<PUBLIC_URL>" "<MESSAGE>" "<GIT_NAME>" "<GIT_EMAIL>"
+import os
+import subprocess
+import re
 
-Example:
-  python update_github_status.py ABC123 "https://dummy.trycloudflare.com" "🟢 Currently Online" "Ameen" "ameen@example.com"
-"""
+# ---------- Function 1: Clone or pull the repo ----------
+def clone_repo(token, username, repo_name):
+    repo_dir = f"/content/{repo_name}_repo"
+    repo_url = f"https://{token}@github.com/{username}/{repo_name}.git"
 
-import sys, os, subprocess
-
-REPO_OWNER = "archlinuxwithniri"
-REPO_NAME = "tempchatapp"
-LOCAL_DIR = "/content/tempchatapp_repo"
-
-def run(cmd, cwd=None):
-    subprocess.run(cmd, check=True, cwd=cwd)
-
-def ensure_repo(token):
-    repo_url = f"https://{REPO_OWNER}:{token}@github.com/{REPO_OWNER}/{REPO_NAME}.git"
-    if not os.path.exists(LOCAL_DIR):
-        run(["git", "clone", "--depth", "1", repo_url, LOCAL_DIR])
+    if not os.path.exists(repo_dir):
+        subprocess.run(["git", "clone", repo_url, repo_dir], check=True)
     else:
-        run(["git", "remote", "set-url", "origin", repo_url], cwd=LOCAL_DIR)
-        run(["git", "fetch", "origin", "--depth", "1"], cwd=LOCAL_DIR)
-        run(["git", "reset", "--hard", "origin/main"], cwd=LOCAL_DIR)
-    return LOCAL_DIR
+        subprocess.run(["git", "-C", repo_dir, "pull"], check=True)
 
-def push_updated_readme(token, url, msg, git_name, git_email):
-    repo_dir = ensure_repo(token)
+    return repo_dir
+
+
+# ---------- Function 2: Edit the README ----------
+def edit_readme(repo_dir, url, online=True):
     readme_path = os.path.join(repo_dir, "README.md")
 
-    # Copy local version into repo
-    if os.path.exists("README.md"):
-        run(["cp", "README.md", readme_path])
+    if not os.path.exists(readme_path):
+        print("No README.md found, creating a new one.")
+        open(readme_path, "w").close()
 
-    # Set Git user identity (local only)
-    run(["git", "config", "user.name", git_name], cwd=repo_dir)
-    run(["git", "config", "user.email", git_email], cwd=repo_dir)
+    with open(readme_path, "r", encoding="utf-8") as f:
+        content = f.read()
 
-    # Commit and push
-    run(["git", "add", "README.md"], cwd=repo_dir)
-    run(["git", "commit", "-m", f"Update live status: {msg}"], cwd=repo_dir)
-    run(["git", "push", "origin", "HEAD:main"], cwd=repo_dir)
-    print("✅ README pushed successfully.")
+    # Remove previous online/offline status lines
+    content = re.sub(r"🟢.*|🔴.*", "", content).strip()
 
+    # Append new status line
+    if online:
+        status_line = f"\n\n🟢 Currently Online — {url}\n"
+    else:
+        status_line = f"\n\n🔴 Currently Offline\n"
+
+    content += status_line
+
+    with open(readme_path, "w", encoding="utf-8") as f:
+        f.write(content)
+
+
+# ---------- Function 3: Commit and push ----------
+def push_changes(repo_dir, username, email, message="Update live status"):
+    subprocess.run(["git", "-C", repo_dir, "config", "user.name", username], check=True)
+    subprocess.run(["git", "-C", repo_dir, "config", "user.email", email], check=True)
+
+    subprocess.run(["git", "-C", repo_dir, "add", "."], check=True)
+
+    # Try committing; skip if nothing changed
+    commit = subprocess.run(
+        ["git", "-C", repo_dir, "commit", "-m", message],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+
+    if "nothing to commit" in commit.stderr.lower():
+        print("No changes to commit.")
+        return
+
+    subprocess.run(["git", "-C", repo_dir, "push"], check=True)
+    print("✅ Changes pushed successfully.")
+
+
+# ---------- Function 4: Full pipeline ----------
+def update_github_status(token, username, email, repo_name, url, online=True):
+    repo_dir = clone_repo(token, username, repo_name)
+    edit_readme(repo_dir, url, online)
+    push_changes(repo_dir, username, email,
+                 message="Update live status: " + ("Online" if online else "Offline"))
+
+
+# ---------- CLI Entry Point ----------
 if __name__ == "__main__":
-    if len(sys.argv) < 6:
-        print("Usage: python update_github_status.py <TOKEN> <URL> <MESSAGE> <GIT_NAME> <GIT_EMAIL>")
+    import sys
+    if len(sys.argv) < 7:
+        print("Usage: python update_github_status.py <token> <username> <email> <repo_name> <url> <online>")
         sys.exit(1)
 
-    token, url, msg, git_name, git_email = sys.argv[1:6]
-    push_updated_readme(token, url, msg, git_name, git_email)
+    token, username, email, repo_name, url, online_flag = sys.argv[1:7]
+    online = online_flag.lower() in ["1", "true", "yes", "online"]
+
+    update_github_status(token, username, email, repo_name, url, online)
