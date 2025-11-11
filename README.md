@@ -1,3 +1,3 @@
 just a chat app , personal project , if the site is online it will be updated here ,
 
-🟢 Currently Online — https://vaccine-italiano-ending-stable.trycloudflare.com
+🟢 Currently Online — https://whale-hawaiian-cable-string.trycloudflare.com
