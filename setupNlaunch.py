@@ -47,7 +47,10 @@ if not os.path.exists(TOKEN_TXT):
     raise SystemExit("❌ token.txt not found after extraction!")
 
 with open(TOKEN_TXT, "r", encoding="utf-8") as f:
-    GITHUB_TOKEN = f.read().strip()
+    lines = [line.strip() for line in f.readlines() if line.strip()]
+    GITHUB_TOKEN = lines[0] if len(lines) > 0 else None
+    EMAIL = lines[1] if len(lines) > 1 else None
+
 
 os.remove(TOKEN_TXT)
 os.remove(ZIP_PATH)
@@ -75,7 +78,7 @@ if not os.path.exists(CLOUDFLARED_BIN):
 # 3️⃣ Flask Chat + Tunnel Setup
 # ----------------------------
 USERNAME = "archlinuxwithniri"
-EMAIL = "archlinuxwithniri@gmail.com"
+EMAIL = EMAIL
 REPO_NAME = "tempchatapp"
 UPDATE_SCRIPT_PATH = "/content/update_github_status.py"
 RAW_PY_URL = f"https://raw.githubusercontent.com/{USERNAME}/{REPO_NAME}/main/update_github_status.py"
