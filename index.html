@@ -1,4 +1,4 @@
-<!-- asds111d -->
+<!-- asdsd -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -95,15 +95,22 @@ photoInput.addEventListener("change",()=>{
   }
 });
 
+let lastLineCount = 0;
+
 async function fetchMessages(){
   try{
     const res = await fetch('/messages');
     if(!res.ok) return;
     const text = await res.text();
-    chat.innerHTML='';
     if(text.trim()==='') return;
+
     const lines = text.split(/\r?\n/).filter(Boolean);
-    for(const l of lines) renderLine(l);
+
+    // Only render new lines
+    const newLines = lines.slice(lastLineCount);
+    newLines.forEach(renderLine);
+
+    lastLineCount = lines.length; // update last line count
   }catch(e){}
 }
 
@@ -119,8 +126,8 @@ function renderLine(line){
 
     const img = document.createElement("img");
     img.src = `/photos/${photoPart}`;
-    img.style.maxWidth = "200px";  // smaller width in chat
-    img.style.maxHeight = "150px"; // smaller height in chat
+    img.style.maxWidth = "40%";  // smaller width in chat
+    img.style.maxHeight = "30%"; // smaller height in chat
     img.style.borderRadius = "8px";
 
     el.innerHTML = `<strong>${userPart} :</strong><br>`;
