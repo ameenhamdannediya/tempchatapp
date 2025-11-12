@@ -13,12 +13,13 @@ header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 header h1{font-size:18px;margin:0;}
 #chat{height:56vh;max-height:60vh;background:var(--panel);border-radius:8px;padding:12px;overflow:auto;border:1px solid rgba(255,255,255,0.03);}
 .msg{padding:6px 8px;margin:6px 0;border-radius:6px;background:rgba(255,255,255,0.02);font-size:14px;word-break:break-word;}
-.meta{font-size:11px;color:var(--muted);margin-bottom:6px;}
-.composer{display:flex;gap:8px;margin-top:10px;}
+.composer{display:flex;gap:8px;margin-top:10px;align-items:flex-end;position:relative;}
 .composer input[type="text"]{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;font-size:15px;}
-.composer input[type="file"]{border-radius:8px;border:1px solid rgba(255,255,255,0.04);}
 .composer button{padding:10px 14px;border-radius:8px;border:none;background:var(--accent);color:#04233a;font-weight:600;cursor:pointer;}
 .composer button:active{transform:translateY(1px);}
+.attach-btn{background:none;border:none;cursor:pointer;font-size:22px;color:var(--muted);}
+#previewContainer{position:absolute;top:-70px;left:0;display:flex;align-items:center;gap:8px;max-width:100%;overflow-x:auto;}
+#previewContainer img{height:50px;border-radius:6px;object-fit:cover;border:1px solid rgba(255,255,255,0.1);}
 footer{font-size:12px;color:var(--muted);margin-top:10px;text-align:center;}
 #namePopup{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:100;}
 .popup-content{background:var(--panel);padding:30px;border-radius:12px;text-align:center;box-shadow:0 0 20px rgba(0,0,0,0.6);width:90%;max-width:320px;}
@@ -44,9 +45,12 @@ footer{font-size:12px;color:var(--muted);margin-top:10px;text-align:center;}
 
 <div id="chat" aria-live="polite" tabindex="0"></div>
 
+<div id="previewContainer"></div>
+
 <div class="composer">
 <input id="input" type="text" placeholder="Type a message and press Enter or Send" autocomplete="off" />
-<input id="photoInput" type="file" accept="image/*" />
+<button class="attach-btn" id="attachBtn">📎</button>
+<input type="file" id="photoInput" accept="image/*" style="display:none;" />
 <button id="send">Send</button>
 </div>
 
@@ -62,6 +66,8 @@ const nameInput = document.getElementById('nameInput');
 const saveNameBtn = document.getElementById('saveNameBtn');
 const userLabel = document.getElementById('userLabel');
 const photoInput = document.getElementById("photoInput");
+const attachBtn = document.getElementById("attachBtn");
+const previewContainer = document.getElementById("previewContainer");
 
 let userName = localStorage.getItem('chatUserName');
 if(!userName){ namePopup.style.display='flex'; } else { userLabel.textContent=userName; namePopup.style.display='none'; }
@@ -72,6 +78,20 @@ function saveName(){
 }
 saveNameBtn.addEventListener('click',saveName);
 nameInput.addEventListener('keydown',e=>{if(e.key==='Enter') saveName();});
+
+// Attach button triggers file input
+attachBtn.addEventListener("click",()=>photoInput.click());
+
+// Show preview when selected
+photoInput.addEventListener("change",()=>{
+  previewContainer.innerHTML="";
+  if(photoInput.files.length>0){
+    const file = photoInput.files[0];
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(file);
+    previewContainer.appendChild(img);
+  }
+});
 
 async function fetchMessages(){
   try{
@@ -117,7 +137,12 @@ async function sendMessage(){
     try{
       const res = await fetch("/upload_photo",{method:"POST",body:formData});
       const data = await res.json();
-      if(data.status==="ok"){ input.value=""; photoInput.value=""; setTimeout(fetchMessages,200);}
+      if(data.status==="ok"){ 
+        input.value=""; 
+        photoInput.value=""; 
+        previewContainer.innerHTML=""; 
+        setTimeout(fetchMessages,200);
+      }
     }catch(e){ console.error("Photo upload failed",e);}
     return;
   }
