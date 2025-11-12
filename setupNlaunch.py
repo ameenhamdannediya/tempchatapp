@@ -1,5 +1,5 @@
 # --- setupNlaunch.py ---
-# Run:  python setupNlaunch.py
+# Run: python setupNlaunch.py
 # Make sure .token.zip exists in your GitHub repo (with token.txt inside)
 
 import os
@@ -10,8 +10,9 @@ import re
 import requests
 import threading
 import pyzipper
-from flask import Flask, Response, request
+from flask import Flask, Response, request, send_from_directory
 from getpass import getpass
+import uuid
 
 # ----------------------------
 # 1️⃣ Download & decrypt .token.zip
@@ -51,7 +52,6 @@ with open(TOKEN_TXT, "r", encoding="utf-8") as f:
     GITHUB_TOKEN = lines[0] if len(lines) > 0 else None
     EMAIL = lines[1] if len(lines) > 1 else None
 
-
 os.remove(TOKEN_TXT)
 os.remove(ZIP_PATH)
 print("🔐 Token successfully loaded and ready to use!")
@@ -84,6 +84,8 @@ UPDATE_SCRIPT_PATH = "/content/update_github_status.py"
 RAW_PY_URL = f"https://raw.githubusercontent.com/{USERNAME}/{REPO_NAME}/main/update_github_status.py"
 GITHUB_HTML = f"https://raw.githubusercontent.com/{USERNAME}/{REPO_NAME}/main/index.html"
 CHAT_FILE = "chat.txt"
+PHOTO_DIR = "/content/photos"
+os.makedirs(PHOTO_DIR, exist_ok=True)
 PORT = 8000
 
 # --- Download update script ---
@@ -123,6 +125,33 @@ def messages():
             return Response(f.read(), mimetype="text/plain")
     except FileNotFoundError:
         return Response("", mimetype="text/plain")
+
+# --- Serve uploaded photos ---
+@app.route("/photos/<filename>")
+def serve_photo(filename):
+    return send_from_directory(PHOTO_DIR, filename)
+
+# --- Upload photo with optional caption ---
+@app.route("/upload_photo", methods=["POST"])
+def upload_photo():
+    file = request.files.get("photo")
+    caption = request.form.get("caption", "").strip()
+    username = request.form.get("username", "Anon")
+    if file:
+        ext = os.path.splitext(file.filename)[1]
+        fname = f"{uuid.uuid4().hex}{ext}"
+        file_path = os.path.join(PHOTO_DIR, fname)
+        file.save(file_path)
+
+        # Save record in chat.txt
+        if caption:
+            line = f"{username} : [photo]{fname}|{caption}"
+        else:
+            line = f"{username} : [photo]{fname}"
+        with open(CHAT_FILE, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+        return {"status": "ok", "filename": fname}
+    return {"status": "error", "msg": "No file uploaded"}, 400
 
 def run_flask():
     app.run(host="0.0.0.0", port=PORT, debug=False, use_reloader=False)
