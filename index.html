@@ -1,4 +1,4 @@
-<!-- asd213sd -->
+<!-- asds237d -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -117,21 +117,26 @@ async function fetchMessages(){
 
 function renderLine(line){
   if(!line) return;
-  const el=document.createElement('div');
-  el.className='msg';
+  const el = document.createElement('div');
+  el.className = 'msg';
 
   if(line.includes("[photo]")){
-    const [userPart,rest] = line.split(" : ");
-    const [photoPart,caption] = rest.replace("[photo]","").split("|");
+    const [userPart, rest] = line.split(" : ");
+    const [photoPart, caption] = rest.replace("[photo]", "").split("|");
+
+    const link = document.createElement("a");
+    link.href = `/photos/${photoPart}`;
+    link.target = "_blank";   // open in new tab
 
     const img = document.createElement("img");
     img.src = `/photos/${photoPart}`;
-    img.style.maxWidth = "40%";  // smaller width in chat
-    img.style.maxHeight = "30%"; // smaller height in chat
+    img.style.maxWidth = "200px";
+    img.style.maxHeight = "150px";
     img.style.borderRadius = "8px";
 
+    link.appendChild(img);  // wrap image in link
     el.innerHTML = `<strong>${userPart} :</strong><br>`;
-    el.appendChild(img);
+    el.appendChild(link);
 
     if(caption){ 
       const cap = document.createElement("div"); 
