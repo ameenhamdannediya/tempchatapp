@@ -1,3 +1,3 @@
 just a chat app , personal project , if the site is online it will be updated here ,
 
-🟢 Currently Online — https://championships-name-costs-seemed.trycloudflare.com
+🟢 Currently Online — https://equal-california-eds-generated.trycloudflare.com
