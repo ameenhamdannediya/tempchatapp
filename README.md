@@ -1,3 +1,3 @@
-just a chat app , personal project , if the site is online it will be updated here ,
+a chat app
 
 🔴 Currently Offline
