@@ -1,3 +1,3 @@
 a chat app
 
-🔴 Currently Offline
+🟢 Currently Online — https://notification-great-romantic-mysterious.trycloudflare.com
